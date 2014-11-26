@@ -33,6 +33,10 @@ static void callhook(lua_State *L, lua_Debug *ar) {
   int currentline;
   lua_Debug previous_ar;
   lprofP_STATE* S;
+  char* var_name;
+  char* var_val;
+  int i;
+
   lua_pushlightuserdata(L, &profstate_id);
   lua_gettable(L, LUA_REGISTRYINDEX);
   S = (lprofP_STATE*)lua_touserdata(L, -1);
@@ -43,11 +47,26 @@ static void callhook(lua_State *L, lua_Debug *ar) {
     lua_getinfo(L, "l", &previous_ar);
     currentline = previous_ar.currentline;
   }
-      
+
   lua_getinfo(L, "nS", ar);
 
   if (!ar->event) {
     /* entering a function */
+
+    /* If it's a stack trace, print it out. Otherwise it gets lost. */
+    if (ar->name && strncmp(ar->name, "error_printer", 13) == 0) {
+      i = 1;
+      while((var_name = lua_getlocal(L, ar, i))) {
+        if (strncmp(var_name, "msg", 3) == 0) {
+          var_val = (char*)lua_tostring(L, -1);
+          fprintf(stderr, "%s\n", var_val);
+        } else {
+          lua_pop(L, 1);
+        }
+        i = i + 1;
+      }
+    }
+
     lprofP_callhookIN(S, (char *)ar->name,
 		      (char *)ar->source, ar->linedefined,
 		      currentline);

@@ -40,6 +40,7 @@ static void callhook(lua_State *L, lua_Debug *ar) {
   lua_pushlightuserdata(L, &profstate_id);
   lua_gettable(L, LUA_REGISTRYINDEX);
   S = (lprofP_STATE*)lua_touserdata(L, -1);
+  lua_pop(L, 1);
 
   if (lua_getstack(L, 1, &previous_ar) == 0) {
     currentline = -1;
@@ -86,12 +87,14 @@ static void exit_profiler(lua_State *L) {
   lua_pushlightuserdata(L, &profstate_id);
   lua_gettable(L, LUA_REGISTRYINDEX);
   S = (lprofP_STATE*)lua_touserdata(L, -1);
+  lua_pop(L, 1);
   /* leave all functions under execution */
   while (lprofP_callhookOUT(S)) ;
   /* call the original Lua 'exit' function */
   lua_pushlightuserdata(L, &exit_id);
   lua_gettable(L, LUA_REGISTRYINDEX);
   lua_call(L, 0, 0);
+  lua_pop(L, 1);
 }
 
 /* Our new coroutine.create function  */
@@ -119,6 +122,7 @@ static int profiler_pause(lua_State *L) {
   lua_pushlightuserdata(L, &profstate_id);
   lua_gettable(L, LUA_REGISTRYINDEX);
   S = (lprofP_STATE*)lua_touserdata(L, -1);
+  lua_pop(L, 1);
   lprofM_pause_function(S);
   return 0;
 }
@@ -128,6 +132,7 @@ static int profiler_resume(lua_State *L) {
   lua_pushlightuserdata(L, &profstate_id);
   lua_gettable(L, LUA_REGISTRYINDEX);
   S = (lprofP_STATE*)lua_touserdata(L, -1);
+  lua_pop(L, 1);
   lprofM_pause_function(S);
   return 0;
 }
